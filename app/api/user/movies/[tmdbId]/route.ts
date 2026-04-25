@@ -45,7 +45,7 @@ export async function PUT(req: NextRequest, { params }: Params) {
     update.watched = watched
     update.watchedAt = watched ? new Date() : null
   }
-  if (rating === null || (typeof rating === 'number' && rating >= 1 && rating <= 10)) {
+  if (rating === null || (typeof rating === 'number' && Number.isInteger(rating) && rating >= 1 && rating <= 10)) {
     update.rating = rating
   }
   if (typeof notes === 'string' || notes === null) {

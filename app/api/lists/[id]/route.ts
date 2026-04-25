@@ -42,8 +42,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   if (error) return NextResponse.json({ error }, { status })
 
   try {
-    await List.findByIdAndDelete(id)
     await ListMovie.deleteMany({ listId: id })
+    await List.findByIdAndDelete(id)
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[lists DELETE]', err)

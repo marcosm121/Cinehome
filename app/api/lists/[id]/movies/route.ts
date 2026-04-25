@@ -72,8 +72,8 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400 }) }
 
   const { tmdbId } = body as Record<string, unknown>
-  if (typeof tmdbId !== 'number') {
-    return NextResponse.json({ error: 'tmdbId requerido' }, { status: 400 })
+  if (typeof tmdbId !== 'number' || !Number.isInteger(tmdbId) || tmdbId <= 0) {
+    return NextResponse.json({ error: 'tmdbId inválido' }, { status: 400 })
   }
 
   try {
