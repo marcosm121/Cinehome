@@ -1,0 +1,17 @@
+export const tokens = {
+  bg: '#0A0A0A',
+  bgElevated: '#141414',
+  bgCard: '#1A1A1A',
+  bgHover: '#222222',
+  ink: '#FFFFFF',
+  inkDim: '#C7C7C7',
+  inkMute: 'rgba(255,255,255,0.56)',
+  inkFaint: 'rgba(255,255,255,0.32)',
+  line: 'rgba(255,255,255,0.08)',
+  lineStrong: 'rgba(255,255,255,0.14)',
+  accent: '#E8A87C',
+  accentStrong: '#FFB27A',
+  gold: '#FFC93C',
+  red: '#E5484D',
+  green: '#4CC38A',
+} as const
