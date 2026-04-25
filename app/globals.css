@@ -56,3 +56,8 @@ html, body {
 html::-webkit-scrollbar, body::-webkit-scrollbar {
   display: none;
 }
+
+/* Search input focus */
+input[type="search"]:focus {
+  border-color: var(--accent) !important;
+}
