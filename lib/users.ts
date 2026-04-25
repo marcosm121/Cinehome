@@ -5,18 +5,23 @@ export interface AppUser {
   passwordHash: string
 }
 
+function decodeHash(encoded: string | undefined): string {
+  if (!encoded) return ''
+  return Buffer.from(encoded, 'base64').toString('utf-8')
+}
+
 const USERS: AppUser[] = [
   {
     id: process.env.USER1_ID ?? 'user1',
     name: process.env.USER1_NAME ?? '',
     username: process.env.USER1_USERNAME ?? '',
-    passwordHash: process.env.USER1_PASSWORD_HASH ?? '',
+    passwordHash: decodeHash(process.env.USER1_PASSWORD_HASH),
   },
   {
     id: process.env.USER2_ID ?? 'user2',
     name: process.env.USER2_NAME ?? '',
     username: process.env.USER2_USERNAME ?? '',
-    passwordHash: process.env.USER2_PASSWORD_HASH ?? '',
+    passwordHash: decodeHash(process.env.USER2_PASSWORD_HASH),
   },
 ]
 
