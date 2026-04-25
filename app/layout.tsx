@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
 
@@ -10,7 +10,20 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: 'Cinehome',
-  description: 'Tu watchlist de películas en pareja',
+  description: 'Tu watchlist de películas para ver en pareja',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Cinehome',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#0A0A0A',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
