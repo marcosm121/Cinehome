@@ -1,13 +1,13 @@
-import mongoose, { Schema, Document, Types } from 'mongoose'
+import mongoose, { Schema, Document } from 'mongoose'
 
-export interface ITmdbCache extends Document {
-  _id: Types.ObjectId | string
+export interface ITmdbCache extends Document<string> {
+  _id: string
   data: unknown
   expiresAt: Date
 }
 
 const TmdbCacheSchema = new Schema<ITmdbCache>({
-  _id: { type: String },
+  _id: { type: String, required: true },
   data: { type: Schema.Types.Mixed },
   expiresAt: { type: Date },
 })

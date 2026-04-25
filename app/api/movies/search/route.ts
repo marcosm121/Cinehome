@@ -9,12 +9,16 @@ export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get('q')?.trim()
   if (!q) return NextResponse.json({ results: [] })
 
-  const slug = q.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 60)
-  const cacheKey = `search:${slug}`
-  const data = await tmdbGet(
-    `/search/movie?query=${encodeURIComponent(q)}&language=es-MX&page=1`,
-    cacheKey
-  )
-  const results = (data.results ?? []).slice(0, 20).map(normalizeTmdbMovie)
-  return NextResponse.json({ results })
+  try {
+    const cacheKey = `search:${encodeURIComponent(q.toLowerCase().trim())}`
+    const data = await tmdbGet(
+      `/search/movie?query=${encodeURIComponent(q)}&language=es-MX&page=1`,
+      cacheKey
+    ) as Record<string, any>
+    const results = (data.results ?? []).slice(0, 20).map(normalizeTmdbMovie)
+    return NextResponse.json({ results })
+  } catch (err) {
+    console.error('[movies/search]', err)
+    return NextResponse.json({ error: 'Error al buscar películas' }, { status: 502 })
+  }
 }

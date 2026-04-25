@@ -10,10 +10,20 @@ export async function GET(
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const data = await tmdbGet(
-    `/movie/${id}/recommendations?language=es-MX&page=1`,
-    `recs:${id}`
-  )
-  const results = (data.results ?? []).slice(0, 12).map(normalizeTmdbMovie)
-  return NextResponse.json({ results })
+  const numericId = parseInt(id, 10)
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    return NextResponse.json({ error: 'ID de película inválido' }, { status: 400 })
+  }
+
+  try {
+    const data = await tmdbGet(
+      `/movie/${numericId}/recommendations?language=es-MX&page=1`,
+      `recs:${numericId}`
+    ) as Record<string, any>
+    const results = (data.results ?? []).slice(0, 12).map(normalizeTmdbMovie)
+    return NextResponse.json({ results })
+  } catch (err) {
+    console.error(`[movies/${numericId}/recommendations]`, err)
+    return NextResponse.json({ error: 'Error al obtener recomendaciones' }, { status: 502 })
+  }
 }

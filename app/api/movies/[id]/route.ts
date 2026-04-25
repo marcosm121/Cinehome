@@ -10,9 +10,19 @@ export async function GET(
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
-  const data = await tmdbGet(
-    `/movie/${id}?language=es-MX&append_to_response=credits`,
-    `movie:${id}`
-  )
-  return NextResponse.json(normalizeTmdbMovie(data))
+  const numericId = parseInt(id, 10)
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    return NextResponse.json({ error: 'ID de película inválido' }, { status: 400 })
+  }
+
+  try {
+    const data = await tmdbGet(
+      `/movie/${numericId}?language=es-MX&append_to_response=credits`,
+      `movie:${numericId}`
+    ) as Record<string, any>
+    return NextResponse.json(normalizeTmdbMovie(data))
+  } catch (err) {
+    console.error(`[movies/${numericId}]`, err)
+    return NextResponse.json({ error: 'Error al obtener la película' }, { status: 502 })
+  }
 }
