@@ -1,7 +1,7 @@
-import mongoose, { Schema, Document } from 'mongoose'
+import mongoose, { Schema, Document, Types } from 'mongoose'
 
 export interface ITmdbCache extends Document {
-  _id: string
+  _id: Types.ObjectId | string
   data: unknown
   expiresAt: Date
 }

@@ -2,6 +2,7 @@ import type { Config } from 'jest'
 
 const config: Config = {
   testEnvironment: 'node',
+  setupFiles: ['<rootDir>/jest.env.ts'],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { useESM: true }],
     '^.+\\.js$': ['ts-jest', { useESM: true }],

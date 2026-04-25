@@ -1,5 +1,3 @@
-process.env.JWT_SECRET = 'test-secret-for-jest-only-32-characters-long'
-
 import { signToken, verifyToken } from '@/lib/auth'
 
 describe('auth utils', () => {
