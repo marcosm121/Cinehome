@@ -13,16 +13,21 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
-    if (res.ok) {
-      router.replace('/')
-    } else {
-      const data = await res.json()
-      setError(data.error || 'Error al iniciar sesión')
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      })
+      if (res.ok) {
+        router.replace('/')
+        return
+      }
+      const data = await res.json().catch(() => ({}))
+      setError((data as any).error || 'Error al iniciar sesión')
+    } catch {
+      setError('No se pudo conectar. Intentá de nuevo.')
+    } finally {
       setLoading(false)
     }
   }
@@ -34,16 +39,18 @@ export default function LoginPage() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'var(--bg)',
+      padding: '0 16px',
     }}>
       <div style={{
-        width: 360,
+        width: '100%',
+        maxWidth: 360,
         padding: 32,
         background: 'var(--bg-card)',
-        borderRadius: 14,
+        borderRadius: 'var(--radius-lg)',
         border: '1px solid var(--line-strong)',
       }}>
         <h1 style={{
-          fontSize: 28, fontWeight: 800, letterSpacing: -1,
+          fontSize: 28, fontWeight: 800, letterSpacing: '-1px',
           margin: '0 0 6px', color: 'var(--ink)',
         }}>
           Cinehome
@@ -52,38 +59,60 @@ export default function LoginPage() {
           Tu lista de películas para ver en pareja.
         </p>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <input
-            type="text"
-            placeholder="Usuario"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            required
-            autoComplete="username"
-            style={{
-              padding: '12px 14px', borderRadius: 8,
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--line-strong)',
-              color: 'var(--ink)', fontSize: 14, outline: 'none',
-              width: '100%', boxSizing: 'border-box',
-            }}
-          />
-          <input
-            type="password"
-            placeholder="Contraseña"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            style={{
-              padding: '12px 14px', borderRadius: 8,
-              background: 'var(--bg-elevated)',
-              border: '1px solid var(--line-strong)',
-              color: 'var(--ink)', fontSize: 14, outline: 'none',
-              width: '100%', boxSizing: 'border-box',
-            }}
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label htmlFor="username" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-mute)', letterSpacing: '0.4px' }}>
+              Usuario
+            </label>
+            <input
+              id="username"
+              name="username"
+              type="text"
+              placeholder="tu usuario"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+              autoComplete="username"
+              style={{
+                padding: '12px 14px', borderRadius: 8,
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--line-strong)',
+                color: 'var(--ink)', fontSize: 14,
+                outline: 'none',
+                boxShadow: 'none',
+                width: '100%',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)' }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--line-strong)' }}
+            />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <label htmlFor="password" style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-mute)', letterSpacing: '0.4px' }}>
+              Contraseña
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              style={{
+                padding: '12px 14px', borderRadius: 8,
+                background: 'var(--bg-elevated)',
+                border: '1px solid var(--line-strong)',
+                color: 'var(--ink)', fontSize: 14,
+                outline: 'none',
+                boxShadow: 'none',
+                width: '100%',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)' }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--line-strong)' }}
+            />
+          </div>
           {error && (
-            <p style={{ fontSize: 13, color: 'var(--red)', margin: 0 }}>{error}</p>
+            <p role="alert" style={{ fontSize: 13, color: 'var(--red)', margin: 0 }}>{error}</p>
           )}
           <button
             type="submit"
@@ -95,6 +124,7 @@ export default function LoginPage() {
               fontWeight: 700, fontSize: 15, border: 'none',
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'background 120ms',
+              width: '100%',
             }}
           >
             {loading ? 'Entrando…' : 'Entrar'}
