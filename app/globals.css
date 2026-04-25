@@ -1,5 +1,6 @@
 @import "tailwindcss";
 
+/* CSS variables for inline style usage */
 :root {
   --bg: #0A0A0A;
   --bg-elevated: #141414;
@@ -18,24 +19,21 @@
   --green: #4CC38A;
 }
 
+/* Tailwind v4 theme — literal values so opacity modifiers work */
 @theme {
-  --color-bg: var(--bg);
-  --color-bg-elevated: var(--bg-elevated);
-  --color-bg-card: var(--bg-card);
-  --color-bg-hover: var(--bg-hover);
-  --color-ink: var(--ink);
-  --color-ink-dim: var(--ink-dim);
-  --color-ink-mute: var(--ink-mute);
-  --color-ink-faint: var(--ink-faint);
-  --color-line: var(--line);
-  --color-line-strong: var(--line-strong);
-  --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-strong);
-  --color-gold: var(--gold);
-  --color-red: var(--red);
-  --color-green: var(--green);
+  --color-bg: #0A0A0A;
+  --color-bg-elevated: #141414;
+  --color-bg-card: #1A1A1A;
+  --color-bg-hover: #222222;
+  --color-ink: #FFFFFF;
+  --color-ink-dim: #C7C7C7;
+  --color-accent: #E8A87C;
+  --color-accent-strong: #FFB27A;
+  --color-gold: #FFC93C;
+  --color-red: #E5484D;
+  --color-green: #4CC38A;
 
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: var(--font-inter), -apple-system, system-ui, sans-serif;
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -49,10 +47,12 @@
 body {
   background: var(--bg);
   color: var(--ink);
-  font-family: 'Inter', -apple-system, system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Remove scrollbar but keep functionality */
-::-webkit-scrollbar { display: none; }
-* { scrollbar-width: none; }
+html, body {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar, body::-webkit-scrollbar {
+  display: none;
+}
