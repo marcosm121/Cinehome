@@ -260,7 +260,12 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
   const [hover, setHover] = useState(0)
   const display = hover || value
   return (
-    <div style={{ display: 'flex', gap: 3 }} role="group" aria-label="Calificación">
+    <div
+      style={{ display: 'flex', gap: 3 }}
+      role="group"
+      aria-label="Calificación"
+      onMouseLeave={() => setHover(0)}
+    >
       {Array.from({ length: 10 }, (_, i) => i + 1).map(i => (
         <svg
           key={i}
@@ -268,7 +273,6 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
           style={{ cursor: 'pointer', flexShrink: 0 }}
           onClick={() => onChange(i)}
           onMouseEnter={() => setHover(i)}
-          onMouseLeave={() => setHover(0)}
           role="button"
           aria-label={`${i} estrella${i !== 1 ? 's' : ''}`}
         >
@@ -303,6 +307,7 @@ function ListToggleRow({ list, tmdbId, movie, onMutate }: { list: any; tmdbId: n
       })
     }
     await mutate()
+    onMutate()
     setLoading(false)
   }
 
