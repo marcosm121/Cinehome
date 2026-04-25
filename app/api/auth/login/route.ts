@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import { signToken, COOKIE_NAME } from '@/lib/auth'
+import { signToken, COOKIE_NAME, SESSION_DURATION_SECONDS } from '@/lib/auth'
 import { getUserByUsername } from '@/lib/users'
 
 export async function POST(req: NextRequest) {
-  const { username, password } = await req.json()
+  let body: unknown
+  try {
+    body = await req.json()
+  } catch {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
+  const { username, password } = body as Record<string, unknown>
+  if (typeof username !== 'string' || typeof password !== 'string') {
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
   const user = getUserByUsername(username)
   if (!user) return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
 
@@ -17,7 +28,7 @@ export async function POST(req: NextRequest) {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 60 * 60 * 24 * 30,
+    maxAge: SESSION_DURATION_SECONDS,
     path: '/',
   })
   return res
