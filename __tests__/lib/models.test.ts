@@ -1,3 +1,4 @@
+import mongoose from 'mongoose'
 import { connectDB } from '@/lib/db'
 import UserMovie from '@/lib/models/UserMovie'
 
@@ -13,5 +14,9 @@ describe('UserMovie model', () => {
     expect(entry.userId).toBe('test-user')
     expect(entry.rating).toBeNull()
     await UserMovie.deleteOne({ _id: entry._id })
+  })
+
+  afterAll(async () => {
+    await mongoose.disconnect()
   })
 })

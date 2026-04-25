@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose'
 
 export interface ITmdbCache extends Document {
   _id: string
-  data: any
+  data: unknown
   expiresAt: Date
 }
 
