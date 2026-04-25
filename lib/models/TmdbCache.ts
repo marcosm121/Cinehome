@@ -1,0 +1,15 @@
+import mongoose, { Schema, Document } from 'mongoose'
+
+export interface ITmdbCache extends Document {
+  _id: string
+  data: any
+  expiresAt: Date
+}
+
+const TmdbCacheSchema = new Schema<ITmdbCache>({
+  _id: { type: String },
+  data: { type: Schema.Types.Mixed },
+  expiresAt: { type: Date, index: { expires: 0 } },
+})
+
+export default mongoose.models.TmdbCache || mongoose.model<ITmdbCache>('TmdbCache', TmdbCacheSchema)
