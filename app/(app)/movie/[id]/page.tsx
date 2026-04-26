@@ -286,26 +286,31 @@ function StarRating({ value, onChange }: { value: number; onChange: (v: number) 
 function ListToggleRow({ list, tmdbId, movie, onMutate }: { list: any; tmdbId: number; movie: any; onMutate: () => void }) {
   const { data, mutate } = useSWR(`/api/lists/${list._id}/movies`, fetcher)
   const inList = (data?.movies ?? []).some((m: any) => m.tmdbId === tmdbId)
-  const [loading, setLoading] = useState(false)
 
   async function toggle() {
-    setLoading(true)
-    if (inList) {
-      await fetch(`/api/lists/${list._id}/movies`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tmdbId }),
-      })
-    } else {
-      await fetch(`/api/lists/${list._id}/movies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tmdbId, tmdbTitle: movie.title, tmdbPosterUrl: movie.posterUrl }),
-      })
-    }
-    await mutate()
+    const willBeInList = !inList
+    const optimisticMovies = willBeInList
+      ? [...(data?.movies ?? []), { tmdbId, tmdbTitle: movie.title, tmdbPosterUrl: movie.posterUrl, addedAt: new Date().toISOString() }]
+      : (data?.movies ?? []).filter((m: any) => m.tmdbId !== tmdbId)
+
+    mutate(
+      async () => {
+        await fetch(`/api/lists/${list._id}/movies`, {
+          method: willBeInList ? 'POST' : 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(willBeInList
+            ? { tmdbId, tmdbTitle: movie.title, tmdbPosterUrl: movie.posterUrl }
+            : { tmdbId }
+          ),
+        })
+      },
+      {
+        optimisticData: { movies: optimisticMovies },
+        rollbackOnError: true,
+        revalidate: true,
+      }
+    )
     onMutate()
-    setLoading(false)
   }
 
   return (
@@ -315,11 +320,10 @@ function ListToggleRow({ list, tmdbId, movie, onMutate }: { list: any; tmdbId: n
         <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginTop: 1 }}>{list.isShared ? 'Compartida' : 'Personal'}</div>
       </div>
       <button
-        disabled={loading}
         onClick={toggle}
         style={{
           padding: '6px 14px', borderRadius: 6, border: 'none',
-          cursor: loading ? 'not-allowed' : 'pointer', fontSize: 13, fontWeight: 600,
+          cursor: 'pointer', fontSize: 13, fontWeight: 600,
           background: inList ? 'var(--green)' : 'var(--bg-elevated)',
           color: inList ? '#000' : 'var(--ink-mute)',
         }}
