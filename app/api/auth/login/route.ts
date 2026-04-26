@@ -20,14 +20,19 @@ export async function POST(req: NextRequest) {
 
   if (password !== user.password) return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 })
 
-  const token = await signToken({ userId: user.id, username: user.username, name: user.name })
-  const res = NextResponse.json({ user: { id: user.id, name: user.name, username: user.username } })
-  res.cookies.set(COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: SESSION_DURATION_SECONDS,
-    path: '/',
-  })
-  return res
+  try {
+    const token = await signToken({ userId: user.id, username: user.username, name: user.name })
+    const res = NextResponse.json({ user: { id: user.id, name: user.name, username: user.username } })
+    res.cookies.set(COOKIE_NAME, token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: SESSION_DURATION_SECONDS,
+      path: '/',
+    })
+    return res
+  } catch (err) {
+    console.error('[login] signToken failed:', err)
+    return NextResponse.json({ error: 'Error de configuración del servidor' }, { status: 500 })
+  }
 }
