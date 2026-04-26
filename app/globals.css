@@ -2,6 +2,7 @@
 
 /* CSS variables for inline style usage */
 :root {
+  --bg-header: rgba(10,10,10,0.88);
   --bg: #0A0A0A;
   --bg-elevated: #141414;
   --bg-card: #1A1A1A;
@@ -70,6 +71,26 @@ input[type="search"]:focus {
     margin-left: var(--sidebar-w);
     transition: margin-left 200ms ease;
   }
+}
+
+/* ── Girly theme ───────────────────────────────────────── */
+[data-theme="girly"] {
+  --bg-header: rgba(251,243,238,0.90);
+  --bg: #FBF3EE;
+  --bg-elevated: #F5EAE3;
+  --bg-card: #FFFFFF;
+  --bg-hover: #EFD9E3;
+  --ink: #3D2A2F;
+  --ink-dim: #6B4A52;
+  --ink-mute: rgba(61,42,47,0.58);
+  --ink-faint: rgba(61,42,47,0.35);
+  --line: rgba(61,42,47,0.10);
+  --line-strong: rgba(61,42,47,0.18);
+  --accent: #E8A4B8;
+  --accent-strong: #C77A8E;
+  --gold: #D4A24C;
+  --red: #C77A8E;
+  --green: #7A9E7E;
 }
 
 /* Navigation progress bar */

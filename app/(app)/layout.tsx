@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Sticky header with search */}
         <header style={{
           position: 'sticky', top: 0, zIndex: 40,
-          background: 'rgba(10,10,10,0.88)',
+          background: 'var(--bg-header)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderBottom: '1px solid var(--line)',

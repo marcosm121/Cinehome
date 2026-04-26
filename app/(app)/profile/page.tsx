@@ -2,11 +2,13 @@
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
 import { Skeleton } from '@/components/Skeleton'
+import { useTheme } from '@/components/ThemeProvider'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const { data: user, isLoading: userLoading } = useSWR('/api/auth/me', fetcher)
   const { data: moviesData, isLoading: moviesLoading } = useSWR('/api/user/movies', fetcher)
   const entries = moviesData?.entries ?? []
@@ -79,6 +81,43 @@ export default function ProfilePage() {
         <div style={{ fontSize: 13, color: 'var(--ink-mute)' }}>
           Géneros favoritos, comparativa con tu pareja, racha de vistas…
         </div>
+      </div>
+
+      {/* Theme toggle */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 20px', borderRadius: 'var(--radius-lg)',
+        background: 'var(--bg-card)', border: '1px solid var(--line)',
+        marginBottom: 12,
+      }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>
+            {theme === 'girly' ? '🌸 Modo Girly' : '🌙 Modo Oscuro'}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 2 }}>
+            {theme === 'girly' ? 'Crema y rosa empolvado' : 'Dark mode clásico'}
+          </div>
+        </div>
+        <button
+          onClick={() => setTheme(theme === 'girly' ? 'dark' : 'girly')}
+          role="switch"
+          aria-checked={theme === 'girly'}
+          style={{
+            width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+            background: theme === 'girly' ? 'var(--accent)' : 'var(--bg-elevated)',
+            border: `1px solid ${theme === 'girly' ? 'var(--accent)' : 'var(--line-strong)'}`,
+            cursor: 'pointer', position: 'relative',
+            transition: 'background 160ms, border-color 160ms',
+          }}
+        >
+          <span style={{
+            position: 'absolute', top: 2,
+            left: theme === 'girly' ? 22 : 2,
+            width: 18, height: 18, borderRadius: '50%',
+            background: theme === 'girly' ? '#fff' : 'var(--ink-faint)',
+            transition: 'left 160ms',
+          }} />
+        </button>
       </div>
 
       {/* Logout */}
