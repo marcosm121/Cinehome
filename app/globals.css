@@ -61,3 +61,13 @@ html::-webkit-scrollbar, body::-webkit-scrollbar {
 input[type="search"]:focus {
   border-color: var(--accent) !important;
 }
+
+/* Sidebar-aware main content offset */
+:root { --sidebar-w: 220px; }
+
+@media (min-width: 768px) {
+  .app-content {
+    margin-left: var(--sidebar-w);
+    transition: margin-left 200ms ease;
+  }
+}

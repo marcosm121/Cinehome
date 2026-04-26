@@ -6,7 +6,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div>
       <Navigation />
       {/* Offset for desktop sidebar */}
-      <div className="md:ml-[220px]">
+      <div className="app-content">
         {/* Sticky header with search */}
         <header style={{
           position: 'sticky', top: 0, zIndex: 40,

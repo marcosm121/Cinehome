@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 const NAV_ITEMS = [
   {
@@ -46,17 +47,31 @@ const NAV_ITEMS = [
 
 export function Navigation() {
   const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
+
+  useEffect(() => {
+    const saved = localStorage.getItem('sidebar-collapsed')
+    if (saved === 'true') setCollapsed(true)
+  }, [])
+
+  useEffect(() => {
+    const w = collapsed ? '64px' : '220px'
+    document.documentElement.style.setProperty('--sidebar-w', w)
+    localStorage.setItem('sidebar-collapsed', String(collapsed))
+  }, [collapsed])
 
   return (
     <>
-      {/* Mobile bottom nav */}
-      <nav style={{
-        position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
-        background: 'var(--bg-elevated)',
-        borderTop: '1px solid var(--line)',
-        display: 'flex',
-        paddingBottom: 'env(safe-area-inset-bottom)',
-      }} className="md:hidden">
+      {/* ── Mobile bottom nav (hidden on md+) ── */}
+      <nav
+        className="flex md:hidden"
+        style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 50,
+          background: 'var(--bg-elevated)',
+          borderTop: '1px solid var(--line)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         {NAV_ITEMS.map(item => {
           const active = pathname === item.href
           return (
@@ -74,38 +89,79 @@ export function Navigation() {
         })}
       </nav>
 
-      {/* Desktop left sidebar */}
-      <aside style={{
-        position: 'fixed', top: 0, left: 0, bottom: 0,
-        width: 220, background: 'var(--bg-elevated)',
-        borderRight: '1px solid var(--line)',
-        padding: '28px 12px',
-        display: 'flex', flexDirection: 'column', gap: 2,
-        zIndex: 40,
-      }} className="hidden md:flex">
+      {/* ── Desktop sidebar (hidden on mobile) ── */}
+      <aside
+        className="hidden md:flex"
+        style={{
+          position: 'fixed', top: 0, left: 0, bottom: 0,
+          width: collapsed ? 64 : 220,
+          background: 'var(--bg-elevated)',
+          borderRight: '1px solid var(--line)',
+          flexDirection: 'column',
+          zIndex: 40,
+          transition: 'width 200ms ease',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header row */}
         <div style={{
-          fontSize: 20, fontWeight: 800, letterSpacing: '-0.8px',
-          color: 'var(--ink)', marginBottom: 24, padding: '0 8px',
+          display: 'flex', alignItems: 'center',
+          justifyContent: collapsed ? 'center' : 'space-between',
+          padding: collapsed ? '20px 0' : '20px 16px 20px 20px',
+          borderBottom: '1px solid var(--line)',
+          flexShrink: 0,
         }}>
-          Cinehome
+          {!collapsed && (
+            <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: '-0.8px', color: 'var(--ink)', whiteSpace: 'nowrap' }}>
+              Cinehome
+            </span>
+          )}
+          <button
+            onClick={() => setCollapsed(v => !v)}
+            aria-label={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+            style={{
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              color: 'var(--ink-mute)', padding: 6, borderRadius: 'var(--radius-sm)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {collapsed ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+              </svg>
+            )}
+          </button>
         </div>
-        {NAV_ITEMS.map(item => {
-          const active = pathname === item.href
-          return (
-            <Link key={item.href} href={item.href} style={{
-              display: 'flex', alignItems: 'center', gap: 10,
-              padding: '10px 12px', borderRadius: 'var(--radius-md)',
-              color: active ? 'var(--ink)' : 'var(--ink-mute)',
-              background: active ? 'var(--bg-hover)' : 'transparent',
-              textDecoration: 'none', fontSize: 14,
-              fontWeight: active ? 600 : 400,
-              transition: 'background 120ms, color 120ms',
-            }}>
-              {item.icon(active)}
-              {item.label}
-            </Link>
-          )
-        })}
+
+        {/* Nav items */}
+        <nav style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+          {NAV_ITEMS.map(item => {
+            const active = pathname === item.href
+            return (
+              <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} style={{
+                display: 'flex', alignItems: 'center',
+                gap: collapsed ? 0 : 10,
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                padding: collapsed ? '10px 0' : '10px 12px',
+                borderRadius: 'var(--radius-md)',
+                color: active ? 'var(--ink)' : 'var(--ink-mute)',
+                background: active ? 'var(--bg-hover)' : 'transparent',
+                textDecoration: 'none', fontSize: 14,
+                fontWeight: active ? 600 : 400,
+                transition: 'background 120ms, color 120ms',
+                whiteSpace: 'nowrap',
+              }}>
+                {item.icon(active)}
+                {!collapsed && item.label}
+              </Link>
+            )
+          })}
+        </nav>
       </aside>
     </>
   )
