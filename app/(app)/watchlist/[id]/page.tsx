@@ -2,7 +2,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { useState } from 'react'
-import Link from 'next/link'
+import { NavLink as Link } from '@/components/NavLink'
 import Image from 'next/image'
 import { RatingBadge } from '@/components/RatingBadge'
 import { Skeleton } from '@/components/Skeleton'

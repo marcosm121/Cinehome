@@ -2,7 +2,7 @@
 import useSWR from 'swr'
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
+import { NavLink as Link } from '@/components/NavLink'
 import { MovieShelf } from '@/components/MovieShelf'
 import { Skeleton } from '@/components/Skeleton'
 import type { NormalizedMovie } from '@/lib/tmdb'

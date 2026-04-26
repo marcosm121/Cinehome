@@ -1,6 +1,6 @@
 'use client'
 import useSWR from 'swr'
-import Link from 'next/link'
+import { NavLink as Link } from '@/components/NavLink'
 import { RatingBadge } from '@/components/RatingBadge'
 import { Skeleton } from '@/components/Skeleton'
 

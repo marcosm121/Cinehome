@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import Link from 'next/link'
+import { NavLink as Link } from './NavLink'
 import { RatingBadge } from './RatingBadge'
 import type { NormalizedMovie } from '@/lib/tmdb'
 
