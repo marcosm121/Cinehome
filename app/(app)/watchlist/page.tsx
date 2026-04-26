@@ -95,10 +95,14 @@ function ListCard({ list }: { list: any }) {
   const movies: any[] = data?.movies ?? []
 
   return (
+    <Link href={`/watchlist/${list._id}`} style={{ textDecoration: 'none' }}>
     <div style={{
       padding: 16, borderRadius: 'var(--radius-lg)',
       background: 'var(--bg-card)', border: '1px solid var(--line)',
-    }}>
+      cursor: 'pointer', transition: 'border-color 120ms',
+    }}
+    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--line-strong)')}
+    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--line)')}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: movies.length ? 12 : 0 }}>
         <div>
           <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{list.name}</div>
@@ -106,12 +110,12 @@ function ListCard({ list }: { list: any }) {
             {movies.length} {movies.length === 1 ? 'película' : 'películas'} · {list.isShared ? '🤝 Compartida' : 'Personal'}
           </div>
         </div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
       {movies.length > 0 && (
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
           {movies.slice(0, 8).map((m: any) => (
-            <Link key={m.tmdbId} href={`/movie/${m.tmdbId}`}>
-              <div style={{ width: 56, flexShrink: 0 }}>
+            <div key={m.tmdbId} style={{ width: 56, flexShrink: 0 }}>
                 <div style={{ aspectRatio: '2/3', background: 'var(--bg-elevated)', borderRadius: 4, overflow: 'hidden' }}>
                   {m.tmdbPosterUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -122,11 +126,11 @@ function ListCard({ list }: { list: any }) {
                     </div>
                   )}
                 </div>
-              </div>
-            </Link>
+            </div>
           ))}
         </div>
       )}
     </div>
+    </Link>
   )
 }
