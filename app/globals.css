@@ -71,3 +71,25 @@ input[type="search"]:focus {
     transition: margin-left 200ms ease;
   }
 }
+
+/* Navigation progress bar */
+body.navigating::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0;
+  height: 2px;
+  background: var(--accent);
+  z-index: 9999;
+  animation: nav-progress 1.2s ease-in-out infinite;
+}
+
+@keyframes nav-progress {
+  0%   { width: 0%;   opacity: 1; }
+  60%  { width: 75%;  opacity: 1; }
+  100% { width: 90%;  opacity: 0.8; }
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 0 }
+  100% { background-position: -100% 0 }
+}

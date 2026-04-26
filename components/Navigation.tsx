@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
 const NAV_ITEMS = [
   {
@@ -47,7 +48,23 @@ const NAV_ITEMS = [
 
 export function Navigation() {
   const pathname = usePathname()
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
+  const [pendingHref, setPendingHref] = useState<string | null>(null)
+
+  useEffect(() => {
+    setPendingHref(null)
+    document.body.classList.remove('navigating')
+  }, [pathname])
+
+  function navigate(href: string) {
+    if (pathname !== href) {
+      window.history.pushState(null, '', href)
+      document.body.classList.add('navigating')
+    }
+    setPendingHref(href)
+    router.push(href)
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem('sidebar-collapsed')
@@ -73,18 +90,19 @@ export function Navigation() {
         }}
       >
         {NAV_ITEMS.map(item => {
-          const active = pathname === item.href
+          const active = pathname === item.href || pendingHref === item.href
           return (
-            <Link key={item.href} href={item.href} style={{
+            <button key={item.href} onClick={() => navigate(item.href)} style={{
               flex: 1, display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               padding: '10px 0',
               color: active ? 'var(--accent)' : 'var(--ink-faint)',
-              textDecoration: 'none', gap: 3,
+              background: 'transparent', border: 'none', cursor: 'pointer',
+              gap: 3,
             }}>
               {item.icon(active)}
               <span style={{ fontSize: 10, fontWeight: active ? 600 : 400 }}>{item.label}</span>
-            </Link>
+            </button>
           )
         })}
       </nav>
@@ -141,9 +159,9 @@ export function Navigation() {
         {/* Nav items */}
         <nav style={{ padding: '12px 8px', display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
           {NAV_ITEMS.map(item => {
-            const active = pathname === item.href
+            const active = pathname === item.href || pendingHref === item.href
             return (
-              <Link key={item.href} href={item.href} title={collapsed ? item.label : undefined} style={{
+              <button key={item.href} onClick={() => navigate(item.href)} title={collapsed ? item.label : undefined} style={{
                 display: 'flex', alignItems: 'center',
                 gap: collapsed ? 0 : 10,
                 justifyContent: collapsed ? 'center' : 'flex-start',
@@ -151,14 +169,14 @@ export function Navigation() {
                 borderRadius: 'var(--radius-md)',
                 color: active ? 'var(--ink)' : 'var(--ink-mute)',
                 background: active ? 'var(--bg-hover)' : 'transparent',
-                textDecoration: 'none', fontSize: 14,
+                border: 'none', cursor: 'pointer', fontSize: 14,
                 fontWeight: active ? 600 : 400,
                 transition: 'background 120ms, color 120ms',
-                whiteSpace: 'nowrap',
+                whiteSpace: 'nowrap', width: '100%',
               }}>
                 {item.icon(active)}
                 {!collapsed && item.label}
-              </Link>
+              </button>
             )
           })}
         </nav>

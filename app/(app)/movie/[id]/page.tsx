@@ -31,18 +31,15 @@ export default function MovieDetailPage() {
   const recs = recsData?.results ?? []
 
   async function handleRate(rating: number) {
-    await updateMovieState(Number(id), { rating, watched: true })
-    mutateState()
+    await updateMovieState(Number(id), { rating, watched: true }, mutateState)
   }
 
   async function handleWatched() {
-    await updateMovieState(Number(id), { watched: !state?.watched })
-    mutateState()
+    await updateMovieState(Number(id), { watched: !state?.watched }, mutateState)
   }
 
   async function saveNote() {
-    await updateMovieState(Number(id), { notes: noteDraft })
-    mutateState()
+    await updateMovieState(Number(id), { notes: noteDraft }, mutateState)
     setEditingNote(false)
   }
 

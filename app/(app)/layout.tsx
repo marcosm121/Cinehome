@@ -1,8 +1,10 @@
 import { Navigation } from '@/components/Navigation'
 import { SearchBar } from '@/components/SearchBar'
+import { SWRProvider } from '@/components/SWRProvider'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
+    <SWRProvider>
     <div>
       <Navigation />
       {/* Offset for desktop sidebar */}
@@ -24,5 +26,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </main>
       </div>
     </div>
+    </SWRProvider>
   )
 }

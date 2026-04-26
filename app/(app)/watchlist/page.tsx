@@ -3,11 +3,12 @@ import useSWR from 'swr'
 import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { Skeleton } from '@/components/Skeleton'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export default function WatchlistPage() {
-  const { data, mutate } = useSWR('/api/lists', fetcher)
+  const { data, mutate, isLoading } = useSWR('/api/lists', fetcher)
   const lists = data?.lists ?? []
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
@@ -78,17 +79,26 @@ export default function WatchlistPage() {
       )}
 
       {/* Cards grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-        gap: 16,
-      }}>
-        {lists.map((list: any) => (
-          <ListCard key={list._id} list={list} />
-        ))}
-      </div>
+      {isLoading && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 16 }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} height={220} borderRadius={14} />
+          ))}
+        </div>
+      )}
+      {!isLoading && (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+          gap: 16,
+        }}>
+          {lists.map((list: any) => (
+            <ListCard key={list._id} list={list} />
+          ))}
+        </div>
+      )}
 
-      {!lists.length && !creating && (
+      {!lists.length && !isLoading && !creating && (
         <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-faint)', fontSize: 14 }}>
           Todavía no tenés listas. ¡Creá una!
         </div>

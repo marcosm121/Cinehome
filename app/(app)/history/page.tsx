@@ -2,12 +2,32 @@
 import useSWR from 'swr'
 import Link from 'next/link'
 import { RatingBadge } from '@/components/RatingBadge'
+import { Skeleton } from '@/components/Skeleton'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export default function HistoryPage() {
-  const { data } = useSWR('/api/user/movies', fetcher)
+  const { data, isLoading } = useSWR('/api/user/movies', fetcher)
   const allEntries = (data?.entries ?? []).filter((e: any) => e.watched)
+
+  const tmdbIds = allEntries.map((e: any) => e.tmdbId)
+  const { data: batchData } = useSWR(
+    tmdbIds.length ? `/api/movies/batch?ids=${tmdbIds.join(',')}` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  )
+  const movieMap: Record<number, any> = {}
+  for (const m of batchData?.movies ?? []) movieMap[m.tmdbId] = m
+
+  if (isLoading) return (
+    <div style={{ padding: '24px 22px 110px' }}>
+      <Skeleton width={100} height={36} borderRadius={8} style={{ marginBottom: 20 }} />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, borderRadius: 12, overflow: 'hidden', marginBottom: 28 }}>
+        <Skeleton height={72} borderRadius={0} /><Skeleton height={72} borderRadius={0} />
+      </div>
+      {Array.from({ length: 6 }).map((_, i) => <SkeletonHistoryRow key={i} />)}
+    </div>
+  )
 
   const rated = allEntries.filter((e: any) => e.rating != null)
   const avg = rated.length
@@ -45,13 +65,25 @@ export default function HistoryPage() {
       )}
 
       {months.map(key => (
-        <MonthGroup key={key} monthKey={key} entries={byMonth[key]} />
+        <MonthGroup key={key} monthKey={key} entries={byMonth[key]} movieMap={movieMap} />
       ))}
     </div>
   )
 }
 
-function MonthGroup({ monthKey, entries }: { monthKey: string; entries: any[] }) {
+function SkeletonHistoryRow() {
+  return (
+    <div style={{ display: 'flex', gap: 14, padding: '12px 0', borderBottom: '1px solid var(--line)', alignItems: 'center' }}>
+      <Skeleton width={40} height={60} borderRadius={4} />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <Skeleton width="60%" height={14} borderRadius={4} />
+        <Skeleton width="40%" height={11} borderRadius={4} />
+      </div>
+    </div>
+  )
+}
+
+function MonthGroup({ monthKey, entries, movieMap }: { monthKey: string; entries: any[]; movieMap: Record<number, any> }) {
   return (
     <div style={{ marginBottom: 32 }}>
       <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--ink)', marginBottom: 12 }}>
@@ -59,15 +91,13 @@ function MonthGroup({ monthKey, entries }: { monthKey: string; entries: any[] })
         <span style={{ color: 'var(--ink-faint)', fontWeight: 400, fontSize: 12 }}>{entries.length}</span>
       </div>
       {entries.map((e: any, i: number) => (
-        <HistoryRow key={e.tmdbId} entry={e} last={i === entries.length - 1} />
+        <HistoryRow key={e.tmdbId} entry={e} movie={movieMap[e.tmdbId] ?? null} last={i === entries.length - 1} />
       ))}
     </div>
   )
 }
 
-function HistoryRow({ entry, last }: { entry: any; last: boolean }) {
-  const { data: movie } = useSWR(`/api/movies/${entry.tmdbId}`, fetcher)
-
+function HistoryRow({ entry, movie, last }: { entry: any; movie: any; last: boolean }) {
   return (
     <Link href={`/movie/${entry.tmdbId}`} style={{
       display: 'flex', gap: 14, padding: '12px 0',
@@ -75,18 +105,27 @@ function HistoryRow({ entry, last }: { entry: any; last: boolean }) {
       alignItems: 'flex-start', textDecoration: 'none',
     }}>
       <div style={{ width: 40, height: 60, borderRadius: 4, overflow: 'hidden', flexShrink: 0, background: 'var(--bg-card)' }}>
-        {movie?.posterUrl && (
+        {movie?.posterUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={movie.posterUrl.replace('w500', 'w92')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <Skeleton width={40} height={60} borderRadius={4} />
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--ink)' }}>
-          {movie?.title ?? `#${entry.tmdbId}`}
-        </div>
-        <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 3 }}>
-          {[movie?.director, movie?.year].filter(Boolean).join(' · ')}
-        </div>
+        {movie ? (
+          <>
+            <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--ink)' }}>{movie.title}</div>
+            <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 3 }}>
+              {[movie.director, movie.year].filter(Boolean).join(' · ')}
+            </div>
+          </>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4 }}>
+            <Skeleton width="65%" height={14} borderRadius={4} />
+            <Skeleton width="40%" height={11} borderRadius={4} />
+          </div>
+        )}
         {entry.notes && (
           <div style={{
             marginTop: 8, padding: '7px 10px',

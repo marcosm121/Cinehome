@@ -1,19 +1,35 @@
 'use client'
 import useSWR from 'swr'
 import { useRouter } from 'next/navigation'
+import { Skeleton } from '@/components/Skeleton'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { data: user } = useSWR('/api/auth/me', fetcher)
-  const { data: moviesData } = useSWR('/api/user/movies', fetcher)
+  const { data: user, isLoading: userLoading } = useSWR('/api/auth/me', fetcher)
+  const { data: moviesData, isLoading: moviesLoading } = useSWR('/api/user/movies', fetcher)
   const entries = moviesData?.entries ?? []
   const watched = entries.filter((e: any) => e.watched)
   const rated = watched.filter((e: any) => e.rating != null)
   const avg = rated.length
     ? (rated.reduce((s: number, e: any) => s + e.rating, 0) / rated.length).toFixed(1)
     : '—'
+
+  if (userLoading || moviesLoading) return (
+    <div style={{ padding: '24px 22px 110px' }}>
+      <div style={{ marginBottom: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Skeleton width={64} height={64} borderRadius={999} />
+        <Skeleton width={160} height={30} borderRadius={8} />
+        <Skeleton width={100} height={14} borderRadius={4} />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, borderRadius: 12, overflow: 'hidden', marginBottom: 32 }}>
+        <Skeleton height={72} borderRadius={0} /><Skeleton height={72} borderRadius={0} />
+        <Skeleton height={72} borderRadius={0} /><Skeleton height={72} borderRadius={0} />
+      </div>
+      <Skeleton height={100} borderRadius={14} />
+    </div>
+  )
 
   async function logout() {
     await fetch('/api/auth/logout', { method: 'POST' })

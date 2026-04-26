@@ -1,10 +1,11 @@
 'use client'
 import { useParams, useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { RatingBadge } from '@/components/RatingBadge'
+import { Skeleton } from '@/components/Skeleton'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -82,41 +83,83 @@ export default function ListDetailPage() {
     })
     setSaving(false)
     setEditingName(false)
-    mutateMovies()
-    // Revalidate lists
-    await fetch('/api/lists')
+    mutateLists()
   }
 
   async function toggleShared() {
-    await fetch(`/api/lists/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ isShared: !list.isShared }),
-    })
-    // Trigger revalidation via router refresh
-    router.refresh()
+    const newShared = !list.isShared
+    // Optimistic: flip isShared immediately
+    mutateLists(
+      async (current: any) => {
+        await fetch(`/api/lists/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isShared: newShared }),
+        })
+        return current
+      },
+      {
+        optimisticData: (current: any) => ({
+          ...current,
+          lists: current?.lists?.map((l: any) =>
+            l._id === id ? { ...l, isShared: newShared } : l
+          ),
+        }),
+        rollbackOnError: true,
+        revalidate: true,
+      }
+    )
   }
 
   async function removeMovie(tmdbId: number) {
-    await fetch(`/api/lists/${id}/movies`, {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tmdbId }),
-    })
-    mutateMovies()
+    // Optimistic: remove movie from local list immediately
+    mutateMovies(
+      async (current: any) => {
+        await fetch(`/api/lists/${id}/movies`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tmdbId }),
+        })
+        return current
+      },
+      {
+        optimisticData: (current: any) => ({
+          ...current,
+          movies: current?.movies?.filter((m: any) => m.tmdbId !== tmdbId) ?? [],
+        }),
+        rollbackOnError: true,
+        revalidate: true,
+      }
+    )
   }
 
   async function setCover(tmdbId: number, posterUrl: string | null) {
     const isCurrent = list.coverTmdbId === tmdbId
-    await fetch(`/api/lists/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        coverTmdbId: isCurrent ? null : tmdbId,
-        coverPosterUrl: isCurrent ? null : posterUrl,
-      }),
-    })
-    mutateLists()
+    const newCoverTmdbId = isCurrent ? null : tmdbId
+    const newCoverPosterUrl = isCurrent ? null : posterUrl
+    // Optimistic: reflect star state immediately
+    mutateLists(
+      async (current: any) => {
+        await fetch(`/api/lists/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ coverTmdbId: newCoverTmdbId, coverPosterUrl: newCoverPosterUrl }),
+        })
+        return current
+      },
+      {
+        optimisticData: (current: any) => ({
+          ...current,
+          lists: current?.lists?.map((l: any) =>
+            l._id === id
+              ? { ...l, coverTmdbId: newCoverTmdbId, coverPosterUrl: newCoverPosterUrl }
+              : l
+          ),
+        }),
+        rollbackOnError: true,
+        revalidate: true,
+      }
+    )
   }
 
   async function deleteList() {
@@ -125,7 +168,17 @@ export default function ListDetailPage() {
   }
 
   if (!list) {
-    return <div style={{ padding: 40, color: 'var(--ink-mute)' }}>Cargando…</div>
+    return (
+      <div style={{ padding: '24px 22px 110px', maxWidth: 1080, margin: '0 auto' }}>
+        <Skeleton width={80} height={14} borderRadius={4} style={{ marginBottom: 24 }} />
+        <Skeleton width={220} height={36} borderRadius={8} style={{ marginBottom: 16 }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '28px 16px', marginTop: 40 }}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} height={240} borderRadius={6} />
+          ))}
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -362,25 +415,13 @@ export default function ListDetailPage() {
 
 // ── Hooks ────────────────────────────────────────────────
 function useMovieDetailsBulk(tmdbIds: number[]) {
-  const [details, setDetails] = useState<Record<number, any>>({})
-  const key = tmdbIds.join(',')
-
-  useEffect(() => {
-    if (!tmdbIds.length) return
-    let cancelled = false
-    Promise.all(
-      tmdbIds.map(id => fetch(`/api/movies/${id}`).then(r => r.json()))
-    ).then(results => {
-      if (cancelled) return
-      const map: Record<number, any> = {}
-      results.forEach(d => { if (d?.tmdbId) map[d.tmdbId] = d })
-      setDetails(map)
-    })
-    return () => { cancelled = true }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key])
-
-  return tmdbIds.map(id => details[id] ?? null)
+  const key = tmdbIds.length ? `/api/movies/batch?ids=${tmdbIds.join(',')}` : null
+  const { data } = useSWR(key, (url: string) => fetch(url).then(r => r.json()), {
+    revalidateOnFocus: false,
+  })
+  const map: Record<number, any> = {}
+  for (const m of data?.movies ?? []) map[m.tmdbId] = m
+  return tmdbIds.map(id => map[id] ?? null)
 }
 
 // ── Sub-components ────────────────────────────────────────
@@ -394,6 +435,10 @@ function MovieGridCard({ listMovie, detail, userState, canRemove, onRemove, onSe
         <div style={{ position: 'relative', aspectRatio: '2/3', borderRadius: 'var(--radius-sm)', overflow: 'hidden', background: 'var(--bg-card)' }}>
           {listMovie.tmdbPosterUrl ? (
             <Image src={listMovie.tmdbPosterUrl} alt={listMovie.tmdbTitle ?? ''} fill sizes="200px" style={{ objectFit: 'cover' }} />
+          ) : detail === null ? (
+            <div style={{ position: 'absolute', inset: 0 }}>
+              <Skeleton width="100%" height="100%" borderRadius={0} />
+            </div>
           ) : (
             <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, color: 'var(--ink-faint)', padding: 8, textAlign: 'center', lineHeight: 1.3 }}>
               {listMovie.tmdbTitle}

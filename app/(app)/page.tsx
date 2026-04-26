@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { MovieShelf } from '@/components/MovieShelf'
+import { Skeleton } from '@/components/Skeleton'
 import type { NormalizedMovie } from '@/lib/tmdb'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -17,7 +18,11 @@ export default function HomePage() {
 
   return (
     <div style={{ paddingBottom: 90 }}>
-      {hero ? <HeroBand movie={hero} /> : <div style={{ height: 480, background: 'var(--bg-elevated)' }} />}
+      {hero ? <HeroBand movie={hero} /> : (
+        <div style={{ height: 480, background: 'var(--bg-elevated)' }}>
+          <Skeleton width="100%" height={480} borderRadius={0} />
+        </div>
+      )}
       <div style={{ marginTop: 8 }}>
         <TonightCard lists={lists} />
         <Section title="Tendencias esta semana">
