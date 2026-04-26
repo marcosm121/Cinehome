@@ -7,6 +7,9 @@ export interface AppUser {
 
 function decodeHash(encoded: string | undefined): string {
   if (!encoded) return ''
+  // Raw bcrypt hash (Render env vars, no dotenv-expand issue)
+  if (encoded.startsWith('$2')) return encoded
+  // Base64-encoded hash (local .env.local, dotenv-expand strips $)
   return Buffer.from(encoded, 'base64').toString('utf-8')
 }
 
