@@ -1,7 +1,7 @@
 'use client'
 import { useParams, useRouter } from 'next/navigation'
 import useSWR from 'swr'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { RatingBadge } from '@/components/RatingBadge'
@@ -15,7 +15,7 @@ export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
-  const { data: listsData } = useSWR('/api/lists', fetcher)
+  const { data: listsData, mutate: mutateLists } = useSWR('/api/lists', fetcher)
   const { data: moviesData, mutate: mutateMovies } = useSWR(`/api/lists/${id}/movies`, fetcher)
   const { data: usersData } = useSWR('/api/users', fetcher)
   const { data: meData } = useSWR('/api/auth/me', fetcher)
@@ -104,6 +104,19 @@ export default function ListDetailPage() {
       body: JSON.stringify({ tmdbId }),
     })
     mutateMovies()
+  }
+
+  async function setCover(tmdbId: number, posterUrl: string | null) {
+    const isCurrent = list.coverTmdbId === tmdbId
+    await fetch(`/api/lists/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        coverTmdbId: isCurrent ? null : tmdbId,
+        coverPosterUrl: isCurrent ? null : posterUrl,
+      }),
+    })
+    mutateLists()
   }
 
   async function deleteList() {
@@ -319,6 +332,8 @@ export default function ListDetailPage() {
               userState={userStates[m.tmdbId]}
               canRemove={isOwner || list.isShared}
               onRemove={() => removeMovie(m.tmdbId)}
+              onSetCover={isOwner ? () => setCover(m.tmdbId, m.tmdbPosterUrl) : undefined}
+              isCover={list.coverTmdbId === m.tmdbId}
             />
           ))}
         </div>
@@ -347,19 +362,29 @@ export default function ListDetailPage() {
 
 // ── Hooks ────────────────────────────────────────────────
 function useMovieDetailsBulk(tmdbIds: number[]) {
-  // Fetch each movie's details; relies on MongoDB cache so N+1 is OK
-  const fetcher = (url: string) => fetch(url).then(r => r.json())
-  const results: any[] = []
-  for (const id of tmdbIds) {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    const { data } = useSWR(`/api/movies/${id}`, fetcher)
-    results.push(data ?? null)
-  }
-  return results
+  const [details, setDetails] = useState<Record<number, any>>({})
+  const key = tmdbIds.join(',')
+
+  useEffect(() => {
+    if (!tmdbIds.length) return
+    let cancelled = false
+    Promise.all(
+      tmdbIds.map(id => fetch(`/api/movies/${id}`).then(r => r.json()))
+    ).then(results => {
+      if (cancelled) return
+      const map: Record<number, any> = {}
+      results.forEach(d => { if (d?.tmdbId) map[d.tmdbId] = d })
+      setDetails(map)
+    })
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key])
+
+  return tmdbIds.map(id => details[id] ?? null)
 }
 
 // ── Sub-components ────────────────────────────────────────
-function MovieGridCard({ listMovie, detail, userState, canRemove, onRemove }: any) {
+function MovieGridCard({ listMovie, detail, userState, canRemove, onRemove, onSetCover, isCover }: any) {
   const [hover, setHover] = useState(false)
   return (
     <div style={{ position: 'relative' }}
@@ -374,11 +399,13 @@ function MovieGridCard({ listMovie, detail, userState, canRemove, onRemove }: an
               {listMovie.tmdbTitle}
             </div>
           )}
+          {/* Runtime — bottom right */}
           {detail?.runtime && (
-            <div style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 'var(--radius-sm)', padding: '3px 7px', fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
+            <div style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 'var(--radius-sm)', padding: '3px 7px', fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
               {detail.runtime}m
             </div>
           )}
+          {/* User rating — top left */}
           {userState?.rating != null && (
             <div style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)', borderRadius: 'var(--radius-sm)', padding: '3px 6px' }}>
               <RatingBadge value={userState.rating} size={10} />
@@ -396,19 +423,38 @@ function MovieGridCard({ listMovie, detail, userState, canRemove, onRemove }: an
         )}
       </Link>
       {canRemove && hover && (
-        <button
-          onClick={e => { e.preventDefault(); onRemove() }}
-          title="Quitar de la lista"
-          style={{
-            position: 'absolute', top: 8, right: detail?.runtime ? 40 : 8,
-            width: 28, height: 28, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
-            border: 'none', cursor: 'pointer', color: 'var(--red)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}
-        >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </button>
+        <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {/* Remove — top */}
+          <button
+            onClick={e => { e.preventDefault(); onRemove() }}
+            title="Quitar de la lista"
+            style={{
+              width: 28, height: 28, borderRadius: '50%',
+              background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+              border: 'none', cursor: 'pointer', color: 'var(--red)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+          {/* Set as cover — below */}
+          {onSetCover && (
+            <button
+              onClick={e => { e.preventDefault(); onSetCover() }}
+              title={isCover ? 'Quitar portada' : 'Usar como portada'}
+              style={{
+                width: 28, height: 28, borderRadius: '50%',
+                background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)',
+                border: 'none', cursor: 'pointer', color: isCover ? 'var(--gold)' : 'var(--ink)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill={isCover ? 'var(--gold)' : 'none'} stroke="currentColor" strokeWidth="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </button>
+          )}
+        </div>
       )}
     </div>
   )

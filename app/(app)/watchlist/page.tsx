@@ -2,6 +2,7 @@
 import useSWR from 'swr'
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
@@ -45,7 +46,7 @@ export default function WatchlistPage() {
 
       {creating && (
         <div style={{
-          padding: 16, marginBottom: 20,
+          padding: 16, marginBottom: 24,
           background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)',
           border: '1px solid var(--line-strong)',
         }}>
@@ -76,16 +77,22 @@ export default function WatchlistPage() {
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {/* Cards grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+        gap: 16,
+      }}>
         {lists.map((list: any) => (
           <ListCard key={list._id} list={list} />
         ))}
-        {!lists.length && !creating && (
-          <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-faint)', fontSize: 14 }}>
-            Todavía no tenés listas. ¡Creá una!
-          </div>
-        )}
       </div>
+
+      {!lists.length && !creating && (
+        <div style={{ textAlign: 'center', padding: 40, color: 'var(--ink-faint)', fontSize: 14 }}>
+          Todavía no tenés listas. ¡Creá una!
+        </div>
+      )}
     </div>
   )
 }
@@ -94,43 +101,91 @@ function ListCard({ list }: { list: any }) {
   const { data } = useSWR(`/api/lists/${list._id}/movies`, fetcher)
   const movies: any[] = data?.movies ?? []
 
+  // Cover: explicit selection first, then most recently added
+  const coverUrl = list.coverPosterUrl ?? movies[0]?.tmdbPosterUrl ?? null
+
   return (
-    <Link href={`/watchlist/${list._id}`} style={{ textDecoration: 'none' }}>
-    <div style={{
-      padding: 16, borderRadius: 'var(--radius-lg)',
-      background: 'var(--bg-card)', border: '1px solid var(--line)',
-      cursor: 'pointer', transition: 'border-color 120ms',
-    }}
-    onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--line-strong)')}
-    onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--line)')}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: movies.length ? 12 : 0 }}>
-        <div>
-          <div style={{ fontWeight: 700, fontSize: 17, color: 'var(--ink)' }}>{list.name}</div>
-          <div style={{ fontSize: 11, color: 'var(--ink-mute)', marginTop: 3 }}>
-            {movies.length} {movies.length === 1 ? 'película' : 'películas'} · {list.isShared ? '🤝 Compartida' : 'Personal'}
+    <Link href={`/watchlist/${list._id}`} style={{ textDecoration: 'none', display: 'block' }}>
+      <div style={{
+        position: 'relative',
+        borderRadius: 'var(--radius-lg)',
+        overflow: 'hidden',
+        aspectRatio: '3/4',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--line)',
+        cursor: 'pointer',
+        transition: 'transform 150ms, box-shadow 150ms',
+      }}
+      onMouseEnter={e => {
+        (e.currentTarget as HTMLElement).style.transform = 'scale(1.02)'
+        ;(e.currentTarget as HTMLElement).style.boxShadow = '0 8px 24px rgba(0,0,0,0.4)'
+      }}
+      onMouseLeave={e => {
+        (e.currentTarget as HTMLElement).style.transform = 'scale(1)'
+        ;(e.currentTarget as HTMLElement).style.boxShadow = 'none'
+      }}>
+
+        {/* Poster */}
+        {coverUrl ? (
+          <Image
+            src={coverUrl}
+            alt={list.name}
+            fill
+            sizes="200px"
+            style={{ objectFit: 'cover' }}
+          />
+        ) : (
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--line-strong)" strokeWidth="1.5">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+        )}
+
+        {/* Gradient overlay */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.0) 40%, rgba(0,0,0,0.85) 100%)',
+        }} />
+
+        {/* Shared badge — top left */}
+        {list.isShared && (
+          <div style={{
+            position: 'absolute', top: 10, left: 10,
+            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+            borderRadius: 'var(--radius-pill)', padding: '3px 8px',
+            fontSize: 10, fontWeight: 600, color: 'var(--accent)',
+          }}>🤝 Compartida</div>
+        )}
+
+        {/* Count badge — top right */}
+        <div style={{
+          position: 'absolute', top: 10, right: 10,
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+          borderRadius: 'var(--radius-pill)', padding: '3px 8px',
+          fontSize: 10, fontWeight: 600, color: 'var(--ink)',
+        }}>
+          {movies.length} {movies.length === 1 ? 'peli' : 'pelis'}
+        </div>
+
+        {/* Title — bottom */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          padding: '12px 12px 14px',
+        }}>
+          <div style={{
+            fontWeight: 700, fontSize: 15, color: 'var(--ink)',
+            letterSpacing: '-0.3px', lineHeight: 1.2,
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {list.name}
           </div>
         </div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      {movies.length > 0 && (
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none' }}>
-          {movies.slice(0, 8).map((m: any) => (
-            <div key={m.tmdbId} style={{ width: 56, flexShrink: 0 }}>
-                <div style={{ aspectRatio: '2/3', background: 'var(--bg-elevated)', borderRadius: 4, overflow: 'hidden' }}>
-                  {m.tmdbPosterUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={m.tmdbPosterUrl.replace('w500', 'w92')} alt={m.tmdbTitle ?? ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'var(--ink-faint)', padding: 4, textAlign: 'center', lineHeight: 1.2 }}>
-                      {m.tmdbTitle}
-                    </div>
-                  )}
-                </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
     </Link>
   )
 }

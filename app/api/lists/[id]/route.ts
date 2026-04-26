@@ -24,10 +24,12 @@ export async function PUT(req: NextRequest, { params }: Params) {
   let body: unknown
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid request' }, { status: 400 }) }
 
-  const { name, isShared } = body as Record<string, unknown>
+  const { name, isShared, coverTmdbId, coverPosterUrl } = body as Record<string, unknown>
   try {
     if (typeof name === 'string' && name.trim()) list!.name = name.trim()
     if (typeof isShared === 'boolean') list!.isShared = isShared
+    if (typeof coverTmdbId === 'number' || coverTmdbId === null) list!.coverTmdbId = coverTmdbId as number | null
+    if (typeof coverPosterUrl === 'string' || coverPosterUrl === null) list!.coverPosterUrl = coverPosterUrl as string | null
     await list!.save()
     return NextResponse.json({ list })
   } catch (err) {
