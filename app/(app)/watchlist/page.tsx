@@ -12,17 +12,14 @@ export default function WatchlistPage() {
   const lists = data?.lists ?? []
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
-  const [newShared, setNewShared] = useState(false)
-
   async function createList() {
     if (!newName.trim()) return
     await fetch('/api/lists', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: newName.trim(), isShared: newShared }),
+      body: JSON.stringify({ name: newName.trim() }),
     })
     setNewName('')
-    setNewShared(false)
     setCreating(false)
     mutate()
   }
@@ -63,10 +60,6 @@ export default function WatchlistPage() {
               color: 'var(--ink)', fontSize: 14, outline: 'none', marginBottom: 10,
             }}
           />
-          <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 12 }}>
-            <input type="checkbox" checked={newShared} onChange={e => setNewShared(e.target.checked)} />
-            <span style={{ fontSize: 13, color: 'var(--ink-dim)' }}>Compartida (visible para los dos)</span>
-          </label>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={createList} style={{ padding: '9px 16px', borderRadius: 'var(--radius-sm)', background: 'var(--accent)', color: '#000', fontWeight: 700, fontSize: 13, border: 'none', cursor: 'pointer' }}>
               Crear
@@ -163,7 +156,7 @@ function ListCard({ list }: { list: any }) {
         }} />
 
         {/* Shared badge — top left */}
-        {list.isShared && (
+        {(list.sharedWith?.length > 0) && (
           <div style={{
             position: 'absolute', top: 10, left: 10,
             background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',

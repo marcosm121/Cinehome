@@ -12,7 +12,7 @@ async function getAccessibleList(req: NextRequest, id: string) {
   await connectDB()
   const list = await List.findById(id)
   if (!list) return { error: 'Lista no encontrada', status: 404, list: null, session: null }
-  if (list.ownerId !== session.userId && !list.isShared) {
+  if (list.ownerId !== session.userId && !list.sharedWith?.includes(session.userId)) {
     return { error: 'Forbidden', status: 403, list: null, session: null }
   }
   return { error: null, status: 200, list, session }

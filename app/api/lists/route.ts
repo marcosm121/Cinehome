@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
   try {
     await connectDB()
     const lists = await List.find({
-      $or: [{ ownerId: session.userId }, { isShared: true }],
+      $or: [{ ownerId: session.userId }, { sharedWith: session.userId }],
     }).sort({ createdAt: -1 })
     return NextResponse.json({ lists })
   } catch (err) {
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
-  const { name, isShared } = body as Record<string, unknown>
+  const { name } = body as Record<string, unknown>
   if (typeof name !== 'string' || !name.trim()) {
     return NextResponse.json({ error: 'Nombre requerido' }, { status: 400 })
   }
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
     const list = await List.create({
       name: name.trim(),
       ownerId: session.userId,
-      isShared: isShared === true,
+      sharedWith: [],
     })
     return NextResponse.json({ list }, { status: 201 })
   } catch (err) {

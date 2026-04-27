@@ -86,15 +86,17 @@ export default function ListDetailPage() {
     mutateLists()
   }
 
-  async function toggleShared() {
-    const newShared = !list.isShared
-    // Optimistic: flip isShared immediately
+  async function toggleUserShare(userId: string, currently: boolean) {
+    const newSharedWith = currently
+      ? (list.sharedWith ?? []).filter((uid: string) => uid !== userId)
+      : [...(list.sharedWith ?? []), userId]
+
     mutateLists(
       async (current: any) => {
         await fetch(`/api/lists/${id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ isShared: newShared }),
+          body: JSON.stringify({ sharedWith: newSharedWith }),
         })
         return current
       },
@@ -102,7 +104,7 @@ export default function ListDetailPage() {
         optimisticData: (current: any) => ({
           ...current,
           lists: current?.lists?.map((l: any) =>
-            l._id === id ? { ...l, isShared: newShared } : l
+            l._id === id ? { ...l, sharedWith: newSharedWith } : l
           ),
         }),
         rollbackOnError: true,
@@ -197,7 +199,7 @@ export default function ListDetailPage() {
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--ink-mute)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: 8 }}>
-          {list.isShared ? '🤝 Lista compartida' : 'Mi lista'}
+          {(list.sharedWith?.length > 0) ? '🤝 Lista compartida' : 'Mi lista'}
         </div>
 
         {editingName ? (
@@ -305,43 +307,27 @@ export default function ListDetailPage() {
         }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)', marginBottom: 16 }}>Configuración de la lista</div>
 
-          {/* Sharing */}
+          {/* Sharing — per-user selector */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16, borderBottom: '1px solid var(--line)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)' }}>Lista compartida</div>
-                <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 2 }}>
-                  {list.isShared
-                    ? `Visible para ${otherUsers.map(u => u.name).join(', ')}`
-                    : 'Solo vos la podés ver'}
-                </div>
-              </div>
-              <Toggle checked={list.isShared} onChange={toggleShared} />
-            </div>
-
-            {list.isShared && otherUsers.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {otherUsers.map((u: any) => (
-                  <div key={u.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '8px 12px', borderRadius: 'var(--radius-md)',
-                    background: 'var(--bg-elevated)',
-                  }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: '50%',
-                      background: 'var(--bg-hover)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 14, fontWeight: 700, color: 'var(--accent)',
-                    }}>{u.name[0]}</div>
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>{u.name}</div>
-                      <div style={{ fontSize: 11, color: 'var(--ink-mute)' }}>@{u.username} · puede ver y agregar</div>
-                    </div>
-                    <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--green)', fontWeight: 600 }}>Acceso ✓</div>
-                  </div>
-                ))}
-              </div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink)' }}>Compartida con</div>
+            {otherUsers.length === 0 && (
+              <div style={{ fontSize: 13, color: 'var(--ink-mute)' }}>No hay otros usuarios.</div>
             )}
+            {otherUsers.map((u: any) => {
+              const isSharedWithUser = (list.sharedWith ?? []).includes(u._id ?? u.id)
+              return (
+                <div key={u._id ?? u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ fontSize: 14, color: 'var(--ink)', fontWeight: 500 }}>{u.name}</div>
+                    <div style={{ fontSize: 11, color: 'var(--ink-mute)' }}>@{u.username}</div>
+                  </div>
+                  <Toggle
+                    checked={isSharedWithUser}
+                    onChange={() => toggleUserShare(u._id ?? u.id, isSharedWithUser)}
+                  />
+                </div>
+              )
+            })}
           </div>
 
           {/* Delete */}
@@ -383,7 +369,7 @@ export default function ListDetailPage() {
               listMovie={m}
               detail={movieDetails.find(d => d?.tmdbId === m.tmdbId)}
               userState={userStates[m.tmdbId]}
-              canRemove={isOwner || list.isShared}
+              canRemove={isOwner || (list.sharedWith?.length > 0)}
               onRemove={() => removeMovie(m.tmdbId)}
               onSetCover={isOwner ? () => setCover(m.tmdbId, m.tmdbPosterUrl) : undefined}
               isCover={list.coverTmdbId === m.tmdbId}
@@ -403,7 +389,7 @@ export default function ListDetailPage() {
               userState={userStates[m.tmdbId]}
               index={i}
               last={i === sorted.length - 1}
-              canRemove={isOwner || list.isShared}
+              canRemove={isOwner || (list.sharedWith?.length > 0)}
               onRemove={() => removeMovie(m.tmdbId)}
             />
           ))}

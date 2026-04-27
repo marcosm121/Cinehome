@@ -3,7 +3,7 @@ import mongoose, { Schema, Document } from 'mongoose'
 export interface IList extends Document {
   name: string
   ownerId: string
-  isShared: boolean
+  sharedWith: string[]
   createdAt: Date
   coverTmdbId: number | null
   coverPosterUrl: string | null
@@ -12,7 +12,7 @@ export interface IList extends Document {
 const ListSchema = new Schema<IList>({
   name: { type: String, required: true },
   ownerId: { type: String, required: true },
-  isShared: { type: Boolean, default: false },
+  sharedWith: { type: [String], default: [] },
   createdAt: { type: Date, default: Date.now },
   coverTmdbId: { type: Number, default: null },
   coverPosterUrl: { type: String, default: null },
