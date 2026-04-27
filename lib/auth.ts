@@ -7,6 +7,8 @@ export interface JwtPayload {
   userId: string
   username: string
   name: string
+  isAdmin: boolean
+  sessionVersion: number
 }
 
 function getSecret(): Uint8Array {
@@ -27,11 +29,11 @@ export async function signToken(payload: JwtPayload): Promise<string> {
 export async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret())
-    const { userId, username, name } = payload as Record<string, unknown>
+    const { userId, username, name, isAdmin, sessionVersion } = payload as Record<string, unknown>
     if (typeof userId !== 'string' || typeof username !== 'string' || typeof name !== 'string') {
       return null
     }
-    return { userId, username, name }
+    return { userId, username, name, isAdmin: !!isAdmin, sessionVersion: typeof sessionVersion === 'number' ? sessionVersion : -1 }
   } catch {
     return null
   }
