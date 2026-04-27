@@ -8,7 +8,7 @@ export function useUser() {
     revalidateOnReconnect: false,
   })
   return {
-    user: data as { id: string; name: string; username: string } | undefined,
+    user: data as { id: string; name: string; username: string; isAdmin: boolean } | undefined,
     loading: isLoading,
     error,
   }

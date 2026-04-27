@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useUser } from '@/hooks/useUser'
 
 const NAV_ITEMS = [
   {
@@ -49,6 +50,7 @@ const NAV_ITEMS = [
 export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
+  const { user } = useUser()
   const [collapsed, setCollapsed] = useState(false)
   const [pendingHref, setPendingHref] = useState<string | null>(null)
 
@@ -105,6 +107,20 @@ export function Navigation() {
             </button>
           )
         })}
+        {user?.isAdmin && (
+          <button onClick={() => navigate('/admin')} style={{
+            flex: 1, display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            padding: '10px 0',
+            color: pathname === '/admin' || pendingHref === '/admin' ? 'var(--accent)' : 'var(--ink-faint)',
+            background: 'transparent', border: 'none', cursor: 'pointer', gap: 3,
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={pathname === '/admin' || pendingHref === '/admin' ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+            <span style={{ fontSize: 10, fontWeight: pathname === '/admin' || pendingHref === '/admin' ? 600 : 400 }}>Admin</span>
+          </button>
+        )}
       </nav>
 
       {/* ── Desktop sidebar (hidden on mobile) ── */}
@@ -179,6 +195,26 @@ export function Navigation() {
               </button>
             )
           })}
+          {user?.isAdmin && (
+            <button onClick={() => navigate('/admin')} style={{
+              display: 'flex', alignItems: 'center',
+              gap: collapsed ? 0 : 10,
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              padding: collapsed ? '10px 0' : '10px 12px',
+              borderRadius: 'var(--radius-md)',
+              color: (pathname === '/admin' || pendingHref === '/admin') ? 'var(--ink)' : 'var(--ink-mute)',
+              background: (pathname === '/admin' || pendingHref === '/admin') ? 'var(--bg-hover)' : 'transparent',
+              border: 'none', cursor: 'pointer', fontSize: 14,
+              fontWeight: (pathname === '/admin' || pendingHref === '/admin') ? 600 : 400,
+              transition: 'background 120ms, color 120ms',
+              whiteSpace: 'nowrap', width: '100%',
+            }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={(pathname === '/admin' || pendingHref === '/admin') ? 2.5 : 2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+              {!collapsed && 'Admin'}
+            </button>
+          )}
         </nav>
       </aside>
     </>
