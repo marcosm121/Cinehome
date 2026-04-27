@@ -7,8 +7,11 @@ import { GENRE_MAP, type NormalizedMovie } from '@/lib/genres'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-const CURRENT_YEAR = new Date().getFullYear()
-const YEARS = Array.from({ length: CURRENT_YEAR - 1969 }, (_, i) => CURRENT_YEAR - i)
+const CURRENT_DECADE = Math.floor(new Date().getFullYear() / 10) * 10
+const DECADES = Array.from(
+  { length: Math.floor((CURRENT_DECADE - 1960) / 10) + 1 },
+  (_, i) => CURRENT_DECADE - i * 10
+)
 
 const RATING_OPTIONS = [
   { label: 'Cualquier rating', value: '' },
@@ -121,8 +124,8 @@ export default function ExplorePage() {
           onChange={e => setYear(e.target.value)}
           style={selectStyle}
         >
-          <option value="">Cualquier año</option>
-          {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+          <option value="">Cualquier década</option>
+          {DECADES.map(d => <option key={d} value={d}>{d}s</option>)}
         </select>
         <select
           value={minRating}
@@ -173,13 +176,13 @@ export default function ExplorePage() {
             </Section>
           </>
         ) : (
-          <div style={{ padding: '0 22px' }}>
+          <div style={{ padding: '0 22px', overflow: 'hidden' }}>
             <div style={{ fontSize: 12, color: 'var(--ink-mute)', marginBottom: 16 }}>
               Página {page} de {totalPages}
             </div>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
               gap: 16,
             }}>
               {results.map(movie => (

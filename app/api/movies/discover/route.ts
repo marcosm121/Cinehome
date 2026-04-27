@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
     include_adult: 'false',
   })
   if (genres) params.set('with_genres', genres)
-  if (year) params.set('primary_release_year', year)
+  if (year) {
+    params.set('primary_release_date.gte', `${year}-01-01`)
+    params.set('primary_release_date.lte', `${Number(year) + 9}-12-31`)
+  }
   if (minRating) params.set('vote_average.gte', minRating)
   if (minRating) params.set('vote_count.gte', '100')
 
