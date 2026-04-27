@@ -25,6 +25,7 @@ export default function HomePage() {
       )}
       <div style={{ marginTop: 8 }}>
         <TonightCard lists={lists} />
+        <ExploreButton />
         <Section title="Tendencias esta semana">
           <MovieShelf movies={trending.slice(1, 10)} />
         </Section>
@@ -117,6 +118,35 @@ function TonightCard({ lists }: { lists: any[] }) {
         Otra
       </button>
     </div>
+  )
+}
+
+function ExploreButton() {
+  return (
+    <Link
+      href="/explore"
+      style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        margin: '12px 22px 0',
+        padding: '14px 16px',
+        borderRadius: 'var(--radius-lg)',
+        background: 'var(--bg-card)', border: '1px solid var(--line-strong)',
+        textDecoration: 'none', color: 'inherit',
+      }}
+    >
+      <div>
+        <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 4 }}>
+          ✦ Descubrir películas
+        </div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--ink)' }}>
+          Explorar catálogo
+        </div>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--ink-mute)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="11" cy="11" r="8"/>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+    </Link>
   )
 }
 
