@@ -8,7 +8,7 @@ const CACHE_TTL_MS = 1000 * 60 * 60 * 6 // 6 hours
 const FETCH_TIMEOUT_MS = 8000
 
 // Static genre map to resolve genre_ids from list endpoints
-const GENRE_MAP: Record<number, string> = {
+export const GENRE_MAP: Record<number, string> = {
   28: 'Acción', 12: 'Aventura', 16: 'Animación', 35: 'Comedia',
   80: 'Crimen', 99: 'Documental', 18: 'Drama', 10751: 'Familia',
   14: 'Fantasía', 36: 'Historia', 27: 'Terror', 10402: 'Música',
