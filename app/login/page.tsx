@@ -20,11 +20,15 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       })
+      const data = await res.json().catch(() => ({}))
+      if (res.ok && (data as any).requiresPasswordSetup) {
+        router.replace(`/set-password?token=${(data as any).tempToken}`)
+        return
+      }
       if (res.ok) {
         router.replace('/')
         return
       }
-      const data = await res.json().catch(() => ({}))
       setError((data as any).error || 'Error al iniciar sesión')
     } catch {
       setError('No se pudo conectar. Intentá de nuevo.')
