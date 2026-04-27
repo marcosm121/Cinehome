@@ -3,8 +3,7 @@ import { useState, useCallback } from 'react'
 import useSWR from 'swr'
 import { MovieShelf } from '@/components/MovieShelf'
 import { MovieCard } from '@/components/MovieCard'
-import { GENRE_MAP } from '@/lib/tmdb'
-import type { NormalizedMovie } from '@/lib/tmdb'
+import { GENRE_MAP, type NormalizedMovie } from '@/lib/genres'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
