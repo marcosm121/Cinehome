@@ -56,7 +56,7 @@ export default function MovieDetailPage() {
       {/* Hero */}
       <div style={{ position: 'relative', height: 460, overflow: 'hidden', background: 'var(--bg-elevated)' }}>
         {movie.backdropUrl && (
-          <Image src={movie.backdropUrl} alt={movie.title} fill sizes="100vw" style={{ objectFit: 'cover', opacity: 0.8 }} priority />
+          <Image src={movie.backdropUrl} alt={movie.title} fill sizes="100vw" style={{ objectFit: 'cover', objectPosition: 'center 20%', opacity: 0.8 }} priority />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(10,10,10,0.2) 0%, var(--bg) 100%)' }} />
         <button

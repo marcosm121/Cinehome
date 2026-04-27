@@ -42,13 +42,13 @@ function HeroBand({ movie }: { movie: NormalizedMovie }) {
           alt={movie.title}
           fill
           sizes="100vw"
-          style={{ objectFit: 'cover', opacity: 0.45 }}
+          style={{ objectFit: 'cover', objectPosition: 'center 20%', opacity: 0.8 }}
           priority
         />
       )}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(180deg, transparent 20%, var(--bg) 100%)',
+        background: 'linear-gradient(180deg, rgba(10,10,10,0.2) 0%, var(--bg) 100%)',
       }} />
       <div style={{ position: 'absolute', left: 22, right: 22, bottom: 28 }}>
         <div style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginBottom: 8, letterSpacing: '0.3px' }}>
