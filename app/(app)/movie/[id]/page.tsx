@@ -3,9 +3,9 @@ import { useParams, useRouter } from 'next/navigation'
 import useSWR from 'swr'
 import { useState } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { RatingBadge } from '@/components/RatingBadge'
 import { MovieShelf } from '@/components/MovieShelf'
+import { WatchAvailabilityCard } from '@/components/WatchAvailabilityCard'
 import { updateMovieState } from '@/hooks/useMovieState'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
@@ -133,6 +133,8 @@ export default function MovieDetailPage() {
           </div>
         )}
       </div>
+
+      <WatchAvailabilityCard tmdbId={Number(id)} />
 
       {/* Tabs */}
       <div style={{ padding: '0 22px' }}>
